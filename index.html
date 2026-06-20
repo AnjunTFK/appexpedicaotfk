@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>APP EXPEDIÇÃO TFK</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<style>
+:root{
+  --green:#009846;--green2:#047857;--navy:#0b2545;--navy2:#061a31;--blue:#2563eb;--orange:#f97316;--red:#dc2626;--gray:#64748b;--line:#e3eaf2;--text:#12213a;--bg:#f4f8fb;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#fbfdff,#edf5f8);color:var(--text)}
+.app{max-width:1660px;margin:0 auto}
+.header{min-height:126px;display:grid;grid-template-columns:280px 1fr 280px;align-items:center;background:#fff;padding:18px 48px;box-shadow:0 8px 24px rgba(15,23,42,.08);border-bottom:1px solid var(--line)}
+.logo img{max-height:86px;max-width:255px;object-fit:contain}.title{text-align:center}.title h1{margin:0;color:var(--navy);font-size:42px;font-weight:1000}.title p{margin:8px 0 0;color:var(--gray);font-size:21px;font-weight:700}.status{text-align:right;font-weight:800;color:#475569}.pill{display:inline-flex;padding:9px 14px;border-radius:999px;background:#e8f8ee;color:#07823f;font-weight:1000;margin-bottom:8px}
+.content{padding:20px}.grid{display:grid;grid-template-columns:280px 1fr;gap:18px}.card,.vehicle-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 22px rgba(15,23,42,.07)}.pad{padding:16px}.section-title{margin:0 0 10px;color:var(--navy);font-size:18px;font-weight:1000}.file-input,.date-input,.text-input,.time-input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#f8fafc;font-size:15px}
+.file-name{color:var(--green);font-weight:1000;word-break:break-word}.small-info{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;font-size:14px}.logic{margin-top:10px;padding:10px;background:#eef6ff;border-radius:12px;color:#0b2545;font-size:13px;line-height:1.45}.btns{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:9px 11px;font-weight:1000;cursor:pointer;background:var(--navy);color:white}.btn.pdf{background:var(--red)}.btn.gray{background:#e8eef5;color:var(--navy)}.btn.green{background:var(--green)}.btn.blue{background:var(--blue)}.btn.orange{background:var(--orange)}
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-bottom:24px}.metric{min-height:118px;background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 22px rgba(15,23,42,.06);padding:18px;display:grid;grid-template-columns:58px 1fr;gap:13px;align-items:center}.metric-icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:1000}.mi-green{background:linear-gradient(135deg,#16a34a,#047857)}.mi-red{background:linear-gradient(135deg,#dc2626,#991b1b)}.mi-blue{background:linear-gradient(135deg,#2563eb,#0f3c9d)}.mi-orange{background:linear-gradient(135deg,#f59e0b,#f97316)}.mi-purple{background:linear-gradient(135deg,#7c3aed,#4c1d95)}.mi-gray{background:linear-gradient(135deg,#64748b,#334155)}.metric-num{font-size:28px;font-weight:1000;color:var(--green);line-height:1}.metric-label{margin-top:8px;font-size:12px;font-weight:1000;color:var(--navy)}.metric-sub{margin-top:6px;color:var(--gray);font-size:12px}
+.result-main{min-height:280px;color:white;border-radius:18px;padding:34px 42px;display:grid;grid-template-columns:140px 1fr;align-items:center;gap:34px;position:relative;overflow:hidden;box-shadow:0 16px 34px rgba(6,26,49,.20);background:linear-gradient(135deg,#08284f,#021d3b);margin-bottom:18px}.result-icon{width:124px;height:124px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:1000;background:rgba(255,255,255,.22);box-shadow:0 12px 26px rgba(0,0,0,.18);z-index:1}.result-title{font-size:46px;line-height:.98;font-weight:1000;z-index:1}.result-sub{margin-top:16px;font-size:22px;font-weight:900;color:#f8fafc;z-index:1}.result-details{margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.22);display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;z-index:1}.detail-label{font-size:13px;color:#dbe4ef;font-weight:1000;text-transform:uppercase}.detail-value{color:white;font-size:19px;font-weight:1000;margin-top:8px}.bg-finalizado{background:linear-gradient(135deg,#facc15,#d97706);color:#172033}.bg-finalizado .detail-label{color:#334155}.bg-finalizado .detail-value{color:#111827}.bg-ok{background:linear-gradient(135deg,#16a34a,#047857)}.bg-erro{background:linear-gradient(135deg,#dc2626,#991b1b)}.bg-alerta{background:linear-gradient(135deg,#f97316,#c2410c)}.bg-wait{background:linear-gradient(135deg,#08284f,#021d3b)}
+.vehicle-list{display:grid;gap:16px}.vehicle-card{padding:18px}.vehicle-head{display:grid;grid-template-columns:120px 1fr 200px;gap:16px;align-items:center}.carro-badge{background:var(--navy);color:white;border-radius:14px;padding:14px;text-align:center;font-size:22px;font-weight:1000}.placa{font-size:32px;font-weight:1000;color:var(--navy);letter-spacing:1px}.subinfo{font-size:14px;color:#64748b;font-weight:800;margin-top:4px}.tag{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:1000;margin-right:6px;margin-top:6px}.tag-ok{background:#e8f8ee;color:#047857}.tag-pendente{background:#fff7ed;color:#c2410c}.tag-info{background:#eef6ff;color:#0b2545}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}.field label{display:block;font-size:12px;font-weight:1000;color:var(--navy);margin-bottom:6px}.field.full{grid-column:1/-1}
+.signature-area{margin-top:16px;border:1px solid var(--line);border-radius:14px;padding:14px;background:#f8fafc}.signature-canvas{width:100%;height:180px;background:white;border:2px dashed #cbd5e1;border-radius:12px;touch-action:none}.table-card{margin-top:18px;padding:20px;overflow:auto}.footer{margin-top:28px;background:#061a31;color:white;padding:18px 28px;display:flex;justify-content:center;align-items:center;font-weight:800;width:100%;max-width:none;text-align:center}
+table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:center;font-size:13px;white-space:nowrap;vertical-align:middle}th{background:#f8fafc;color:#334155;font-weight:1000}.empty{color:var(--gray);text-align:center;padding:34px 12px}
+
+.sync-panel{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#f8fafc;font-size:12px;line-height:1.45;color:#0b2545}
+.sync-row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #e3eaf2;padding-top:6px;margin-top:6px}
+.sync-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-weight:1000;background:#e8f8ee;color:#047857}
+.sync-badge.warn{background:#fff7ed;color:#c2410c}.sync-badge.err{background:#fee2e2;color:#b91c1c}.sync-badge.blue{background:#eef6ff;color:#0b2545}
+.btn.danger{background:#dc2626!important;color:#fff!important;border:2px solid #991b1b!important;box-shadow:0 6px 14px rgba(220,38,38,.22)}
+@media(max-width:1200px){.header{grid-template-columns:1fr;min-height:auto;text-align:center}.status{text-align:center}.grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.result-main{grid-template-columns:1fr;text-align:center}.result-icon{margin:auto}.result-details{grid-template-columns:1fr}.vehicle-head{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.metrics{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.content{padding:14px}.header{padding:14px}.title h1{font-size:30px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header">
+  <div class="logo"><img src="data:image/png;base64,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" alt="Anjun TFK"></div>
+  <div class="title"><h1>APP EXPEDIÇÃO TFK</h1><p>Controle de Carregamento e Expedição</p></div>
+  <div class="status"><div class="pill">✓ Sistema online</div><div><span id="dataHoje"></span> &nbsp; <span id="horaAtual"></span></div></div>
+</header>
+
+<div class="content">
+<main class="grid">
+<aside>
+<section class="card pad">
+  <h2 class="section-title">▤ IMPORTAR ROMANEIO ANJUN</h2>
+  <input class="file-input" id="romaneioInput" type="file" accept=".xlsx,.xls,.csv" multiple>
+  <div style="margin-top:12px;color:#475569;font-size:14px">Último arquivo</div>
+  <div id="fileName" class="file-name">Nenhum arquivo selecionado</div>
+  <div class="small-info"><span>Veículos do dia</span><strong id="sideVeiculos" style="color:var(--green)">0</strong></div>
+  <div class="small-info"><span>Fila pendente</span><strong id="sidePendentes" style="color:var(--orange)">0</strong></div>
+  <div style="margin-top:14px"><label style="font-size:13px;font-weight:1000;color:var(--navy)">DATA DE OPERAÇÃO</label><input id="dataOperacao" class="date-input" type="date"></div>
+  <div class="logic">
+    <strong>Regra do app:</strong><br>
+    • Cada romaneio importado cria um veículo na fila.<br>
+    • O número <b>Carro 1, 2, 3...</b> é criado pela ordem de registro da placa no dia.<br>
+    • Dados Anjun vêm do romaneio.<br>
+    • Dados J&T são preenchidos e assinados no app.
+  </div>
+  <div style="margin-top:14px" class="btns">
+    <button class="btn danger" onclick="limparDia()">⚠ Apagar dados do dia</button>
+    
+  </div>
+  <div id="syncPanel" class="sync-panel">
+    <div><span id="syncBadge" class="sync-badge blue">● Aguardando conexão</span></div>
+    <div class="sync-row"><span>Banco de dados</span><strong id="syncBanco">Conectando...</strong></div>
+    <div class="sync-row"><span>Upload de romaneio</span><strong id="syncUpload">Nenhum upload</strong></div>
+    <div class="sync-row"><span>Última atualização</span><strong id="syncHora">--:--</strong></div>
+  </div>
+</section>
+
+
+
+</aside>
+
+<section>
+<div class="metrics">
+  <div class="metric"><div class="metric-icon mi-blue">🚚</div><div><div id="mVeiculos" class="metric-num">0</div><div class="metric-label">VEÍCULOS</div><div class="metric-sub">registrados hoje</div></div></div>
+  <div class="metric"><div class="metric-icon mi-green">✓</div><div><div id="mAssinados" class="metric-num">0</div><div class="metric-label">ASSINADOS</div><div class="metric-sub">J&T confirmado</div></div></div>
+  <div class="metric"><div class="metric-icon mi-orange">!</div><div><div id="mPendentes" class="metric-num" style="color:var(--orange)">0</div><div class="metric-label">PENDENTES</div><div class="metric-sub">aguardando J&T</div></div></div>
+  <div class="metric"><div class="metric-icon mi-purple">📦</div><div><div id="mPacotes" class="metric-num" style="color:#5b21b6">0</div><div class="metric-label">PACOTES</div><div class="metric-sub">romaneios</div></div></div>
+  <div class="metric"><div class="metric-icon mi-gray">#</div><div><div id="mPecas" class="metric-num" style="color:#334155">0</div><div class="metric-label">PEÇAS</div><div class="metric-sub">total</div></div></div>
+  <div class="metric"><div class="metric-icon mi-red">KG</div><div><div id="mPeso" class="metric-num" style="color:var(--red)">0</div><div class="metric-label">PESO KG</div><div class="metric-sub">total</div></div></div>
+</div><div class="card pad" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:16px"><strong style="color:var(--navy)">⏱ Tempo médio de retirada</strong><span id="mTempoMedio" style="font-size:26px;font-weight:1000;color:var(--orange)">--:--</span></div>
+
+<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <label style="font-size:13px;font-weight:800;color:#0b2545">🔍 Pesquisar carro:</label>
+  <select id="selectCarro" onchange="pesquisarCarro()" style="padding:8px 12px;border:1px solid #e3eaf2;border-radius:10px;font-size:14px;font-weight:800;color:#0b2545;background:#f8fafc;min-width:160px">
+    <option value="">— Selecione —</option>
+  </select>
+  <button onclick="document.getElementById('selectCarro').value='';atualizarPainelStatus(registros[registros.length-1])" style="padding:8px 12px;border:0;border-radius:10px;background:#e8eef5;color:#0b2545;font-weight:800;cursor:pointer;font-size:13px">✕ Limpar pesquisa</button>
+</div>
+<section id="resultMain" class="result-main bg-wait">
+  <div class="result-icon">🚚</div>
+  <div>
+    <div class="result-title">EXPEDIÇÃO TFK</div>
+    <div class="result-sub">Importe o romaneio Anjun para iniciar a fila de retirada</div>
+    <div class="result-details">
+      <div><div class="detail-label">Fila</div><div id="infoFila" class="detail-value">-</div></div>
+      <div><div class="detail-label">Última placa</div><div id="infoPlaca" class="detail-value">-</div></div>
+      <div><div class="detail-label">Status</div><div id="infoStatus" class="detail-value">Aguardando</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="card pad">
+  <h2 class="section-title">🚚 FILA DE RETIRADA DO DIA</h2>
+  <div id="listaVeiculos" class="vehicle-list"><div class="empty">Nenhum veículo registrado ainda.</div></div>
+</section>
+
+<section class="card table-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px"><h2 class="section-title" style="margin:0">📋 HISTÓRICO DO DIA</h2><button class="btn pdf" onclick="exportarHistoricoDia()">Exportar Histórico do Dia</button></div>
+  <table>
+    <thead><tr><th>Carro</th><th>Placa</th><th>Cliente</th><th>Destino</th><th>Pacotes</th><th>Peças</th><th>Peso KG</th><th>MAWBs</th><th>Total de Lacres</th><th>Romaneio</th><th>Conclusão ANJUN</th><th>Chegada J&T</th><th>Saída J&T</th><th>Motorista J&T</th><th>Assinatura</th><th>Tempo</th><th>Status</th></tr></thead>
+    <tbody id="historicoBody"><tr><td colspan="17">Nenhum registro.</td></tr></tbody>
+  </table>
+</section>
+</section>
+</main>
+</div>
+
+<footer class="footer"><div>Desenvolvido por Aldo Romanelli</div></footer>
+</div>
+
+<script>
+let registros = [];
+let canvasAtivo = null;
+let desenhando = false;
+
+// GOOGLE DRIVE / APPS SCRIPT
+// Cole aqui a URL do Web App publicado no Apps Script.
+// Exemplo: https://script.google.com/macros/s/SEU_ID/exec
+const GOOGLE_DRIVE_UPLOAD_URL = "https://script.google.com/macros/s/AKfycbxTLVOJj22H4yZDjF4zfABVQC5JHiRbQRlo-acdtGto42M5XH2pVOt4yPg6edVRYIVG/exec";
+
+function hojeISO(){return new Date().toISOString().slice(0,10)}
+function dataBR(iso){const [a,m,d]=iso.split("-");return d+"/"+m+"/"+a}
+function normalizar(v){return String(v||"").trim()}
+function num(v){const s=String(v||"").replace(/\./g,"").replace(",",".").replace(/[^\d.-]/g,"");const n=Number(s);return isNaN(n)?0:n}
+function fmt(n){return Number(n||0).toLocaleString("pt-BR")}
+function fmtPeso(n){return Number(n||0).toLocaleString("pt-BR",{minimumFractionDigits:3,maximumFractionDigits:3})}
+function placaLimpa(v){return String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").trim()}
+function storageKey(){return "expedicao_tfk_"+(document.getElementById("dataOperacao").value||hojeISO())}
+function clearKey(){return "expedicao_tfk_clear_"+(document.getElementById("dataOperacao").value||hojeISO())}
+function getClearSeq(){return Number(localStorage.getItem(clearKey())||0)}
+function setClearSeq(v){localStorage.setItem(clearKey(),String(Number(v)||0))}
+function limparCacheDataSelecionada(){
+  const dataAtual=document.getElementById("dataOperacao")?.value||hojeISO();
+  const prefixos=[
+    "expedicao_tfk_"+dataAtual,
+    "expedicao_tfk_temp_"+dataAtual,
+    "expedicao_tfk_importando_"+dataAtual
+  ];
+
+  // Limpeza forte: remove qualquer cache do app que possa estar segurando veículos antigos.
+  // Mantém somente a chave clearSeq da data, que bloqueia aparelhos antigos de regravar dados apagados.
+  const chaveClear="expedicao_tfk_clear_"+dataAtual;
+  try{
+    Object.keys(localStorage).forEach(k=>{
+      if(k.startsWith("expedicao_tfk_") && k!==chaveClear){
+        localStorage.removeItem(k);
+      }
+    });
+    Object.keys(sessionStorage||{}).forEach(k=>{
+      if(k.startsWith("expedicao_tfk_")){
+        sessionStorage.removeItem(k);
+      }
+    });
+  }catch(e){console.warn("Falha ao limpar cache local do app:",e);}
+
+  prefixos.forEach(k=>{try{localStorage.removeItem(k);}catch(e){}});
+}
+async function apagarRomaneiosGoogleDriveDaData(dataOp){
+  // Best effort: apaga também os arquivos originais do romaneio no Google Drive da data selecionada.
+  // A exclusão do Firestore continua sendo a fonte principal para zerar o app online.
+  if(!GOOGLE_DRIVE_UPLOAD_URL || GOOGLE_DRIVE_UPLOAD_URL.includes("COLE_AQUI"))return;
+  try{
+    await fetch(GOOGLE_DRIVE_UPLOAD_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({acao:"apagarData",dataOp,origem:"APP_EXPEDICAO_TFK"})
+    });
+  }catch(e){
+    console.warn("Não foi possível apagar romaneios do Google Drive:",e);
+  }
+}
+function limparTelaLocalCompleta(){
+  if(_salvarFirebaseTimer)clearTimeout(_salvarFirebaseTimer);
+  localStorage.removeItem(storageKey());
+  registros=[];
+  renderTudo();
+  zerarPainelInformativo();
+  const fn=document.getElementById("fileName"); if(fn)fn.innerText="Nenhum arquivo selecionado";
+  const inp=document.getElementById("romaneioInput"); if(inp)inp.value="";
+  const sel=document.getElementById("selectCarro"); if(sel)sel.value="";
+}
+
+function horaSync(){return new Date().toLocaleTimeString("pt-BR")}
+function atualizarStatusTempoReal(tipo,msg){
+  const badge=document.getElementById("syncBadge");
+  const banco=document.getElementById("syncBanco");
+  const upload=document.getElementById("syncUpload");
+  const hora=document.getElementById("syncHora");
+  if(!badge)return;
+  const mapa={ok:["sync-badge","● Online"],wait:["sync-badge warn","● Sincronizando"],err:["sync-badge err","● Atenção"],blue:["sync-badge blue","● Aguardando"]};
+  const st=mapa[tipo]||mapa.blue;
+  badge.className=st[0];
+  badge.textContent=st[1];
+  if(msg){
+    if(msg.toLowerCase().includes("upload") || msg.toLowerCase().includes("arquivo") || msg.toLowerCase().includes("storage") || msg.toLowerCase().includes("drive")){
+      if(upload)upload.textContent=msg;
+    }else{
+      if(banco)banco.textContent=msg;
+    }
+  }
+  if(hora)hora.textContent=horaSync();
+}
+
+function zerarPainelInformativo(){
+  if(_timerPainel)clearInterval(_timerPainel);
+  const painel=document.getElementById("resultMain");
+  if(!painel)return;
+  painel.className="result-main bg-wait";
+  painel.innerHTML=`
+    <div class="result-icon">🚚</div>
+    <div>
+      <div class="result-title">EXPEDIÇÃO TFK</div>
+      <div class="result-sub">Importe o romaneio Anjun para iniciar a fila de retirada</div>
+      <div class="result-details" style="grid-template-columns:1fr 1fr">
+        <div><div class="detail-label">Fila</div><div class="detail-value">-</div></div>
+        <div><div class="detail-label">Última placa</div><div class="detail-value">-</div></div>
+      </div>
+    </div>`;
+}
+
+let _salvarFirebaseTimer=null;
+function salvarLocal(){
+  localStorage.setItem(storageKey(),JSON.stringify(registros));
+  // Atualiza a tela imediatamente no aparelho atual e grava no Firebase logo em seguida.
+  // O pequeno atraso agrupa alterações rápidas e evita travar a importação.
+  if(window.db){
+    if(_salvarFirebaseTimer)clearTimeout(_salvarFirebaseTimer);
+    _salvarFirebaseTimer=setTimeout(()=>salvarFirebase(true),120);
+  }
+}
+function carregarLocal(){
+  try{registros=JSON.parse(localStorage.getItem(storageKey())||"[]")}catch(e){registros=[]}
+  const clearSeq=getClearSeq();
+  if(clearSeq){
+    registros=(registros||[]).filter(r=>Number(r.criadoMs||0)>clearSeq);
+    localStorage.setItem(storageKey(),JSON.stringify(registros));
+  }
+  renderTudo();
+}
+
+let _unsubscribeFirebase=null;
+let _gravandoFirebase=false;
+let _limpandoFirebase=false;
+let _ultimoClearLocal=0;
+
+function valorPreenchido(v){
+  return v!==undefined && v!==null && String(v).trim()!=="";
+}
+
+function mergeSemApagarCampos(antigo, novo){
+  const out={...(antigo||{})};
+  Object.keys(novo||{}).forEach(k=>{
+    const v=novo[k];
+    // Nunca troca arquivo/link/assinatura já salvo por campo vazio vindo de outro aparelho ou do cache.
+    if(["arquivoUrl","arquivoPath","arquivoData","assinatura"].includes(k)){
+      if(valorPreenchido(v))out[k]=v;
+      return;
+    }
+    // Também preserva status de upload já concluído.
+    if(k==="arquivoUploadStatus" && out[k]==="ENVIADO" && v!=="ENVIADO")return;
+    out[k]=v;
+  });
+  return out;
+}
+
+function mergeRegistros(base, novos){
+  const mapa={};
+  (base||[]).forEach(r=>{if(r&&r.id)mapa[r.id]=mergeSemApagarCampos(mapa[r.id],r);});
+  (novos||[]).forEach(r=>{
+    if(!r||!r.id)return;
+    mapa[r.id]=mergeSemApagarCampos(mapa[r.id],r);
+  });
+  return Object.values(mapa).sort((a,b)=>(Number(a.carro||0)-Number(b.carro||0)) || String(a.criadoEm||"").localeCompare(String(b.criadoEm||"")));
+}
+
+function registroParaFirebase(r){
+  const x={...r};
+  // Firestore tem limite por documento. O arquivo fica no Google Drive; aqui grava só o link/caminho.
+  delete x.arquivoData;
+  return x;
+}
+
+function carregarDoFirebase(){
+  const iso=document.getElementById("dataOperacao")?.value||hojeISO();
+  atualizarStatusTempoReal("wait","Conectando ao banco...");
+  if(!window.db){atualizarStatusTempoReal("err","Firebase não conectado");renderTudo();return;}
+  if(_unsubscribeFirebase){_unsubscribeFirebase();_unsubscribeFirebase=null;}
+
+  _unsubscribeFirebase=db.collection("expedicao_diaria").doc(iso).onSnapshot(snap=>{
+    atualizarStatusTempoReal("ok", snap.metadata && snap.metadata.hasPendingWrites ? "Banco atualizando local..." : "Banco atualizado online");
+    if(_limpandoFirebase){
+      renderTudo();
+      return;
+    }
+
+    if(!snap.exists){
+      // Documento ainda não existe. Se a data foi apagada, nunca recria com cache antigo.
+      if(getClearSeq()>0){
+        registros=[];
+        limparCacheDataSelecionada();
+        renderTudo();
+        zerarPainelInformativo();
+        atualizarStatusTempoReal("ok","Firebase online sem veículos");
+      }else if(registros.length>0){
+        renderTudo();
+        salvarFirebase(true);
+      }else{
+        renderTudo();
+        zerarPainelInformativo();
+      }
+      return;
+    }
+
+    const d=snap.data()||{};
+    const regsFirebase=Array.isArray(d.registros)?d.registros:[];
+    const clearSeq=Number(d.clearSeq||0);
+
+    // Quando qualquer usuário apaga o dia, todos os aparelhos zeram a RAM/tela/cache.
+    // Mesmo quando o clearSeq é igual ao local, registros antigos NÃO podem permanecer na tela.
+    if(d.apagadoDefinitivo===true || clearSeq>getClearSeq() || (clearSeq>0 && regsFirebase.length===0)){
+      if(clearSeq>0)setClearSeq(clearSeq);
+      registros=[];
+      limparCacheDataSelecionada();
+      if(clearSeq>0)setClearSeq(clearSeq);
+      renderTudo();
+      zerarPainelInformativo();
+      atualizarStatusTempoReal("ok","Banco zerado online");
+      return;
+    }
+
+    if(regsFirebase.length===0){
+      registros=[];
+      localStorage.removeItem(storageKey());
+      renderTudo();
+      zerarPainelInformativo();
+      atualizarStatusTempoReal("ok","Banco online sem veículos");
+      return;
+    }
+
+    const antes=JSON.stringify(registros.map(r=>({id:r.id,assinatura:r.assinatura,status:r.status,arquivoUrl:r.arquivoUrl,carro:r.carro})));
+    registros=mergeRegistros(registros,regsFirebase);
+    registros.forEach((r,i)=>r.carro=i+1);
+    localStorage.setItem(storageKey(),JSON.stringify(registros));
+    renderTudo();
+
+    const depois=JSON.stringify(registros.map(r=>({id:r.id,assinatura:r.assinatura,status:r.status,arquivoUrl:r.arquivoUrl,carro:r.carro})));
+    // Se houve renumeração/merge local, sincroniza de volta sem sobrescrever dados existentes.
+    if(antes!==depois && !_gravandoFirebase){
+      setTimeout(()=>salvarFirebase(true),150);
+    }
+  },err=>{
+    atualizarStatusTempoReal("err","Erro no banco: "+err.message);
+    console.error("Erro listener Firebase:",err);
+    renderTudo();
+  });
+}
+
+function extrairDataArquivo(nome){
+  const m=String(nome||"").match(/(\d{2})[.\-_/](\d{2})[.\-_/](\d{4})/);
+  if(m)return `${m[3]}-${m[2]}-${m[1]}`;
+  return document.getElementById("dataOperacao").value||hojeISO();
+}
+
+function textoBusca(v){
+  return String(v||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().replace(/[^a-z0-9]/g,"");
+}
+
+function buscarValorPorRotulo(rows, rotulo){
+  const alvo = textoBusca(rotulo);
+  const limite=Math.min(rows.length,80);
+  for(let r=0;r<limite;r++){
+    const row=rows[r]||[];
+    for(let c=0;c<row.length;c++){
+      const txt=textoBusca(row[c]);
+      if(txt && (txt.includes(alvo)||alvo.includes(txt))){
+        // 1) Valor na célula da direita
+        for(let k=c+1;k<Math.min(row.length,c+8);k++){
+          if(String(row[k]||"").trim())return row[k];
+        }
+        // 2) Valor logo abaixo do rótulo
+        for(let rr=r+1;rr<Math.min(rows.length,r+6);rr++){
+          if(rows[rr] && String(rows[rr][c]||"").trim())return rows[rr][c];
+        }
+      }
+    }
+  }
+  return "";
+}
+
+function placaPorNomeArquivo(nome){
+  const base=String(nome||"").toUpperCase().replace(/[^A-Z0-9]/g," ");
+  const m=base.match(/\b[A-Z]{3}[0-9][A-Z0-9][0-9]{2}\b/) || base.match(/\b[A-Z]{3}[0-9]{4}\b/);
+  return m?m[0]:"";
+}
+
+function extrairMawbs(rows){
+  const out=[];
+  for(let r=3;r<rows.length;r++){
+    for(let c=0;c<rows[r].length;c++){
+      const v=String(rows[r][c]||"").trim();
+      if(/^\d{3}-\d{6,}/.test(v))out.push(v);
+    }
+  }
+  return [...new Set(out)];
+}
+
+function arquivoParaBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function nomeSeguroArquivo(nome){
+  return String(nome||"romaneio.xlsx")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-zA-Z0-9._-]/g,"_")
+    .slice(0,120);
+}
+
+function arquivoParaBase64SemPrefixo(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const txt=String(reader.result||"");
+      resolve(txt.includes(",")?txt.split(",")[1]:txt);
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function salvarRomaneioNoGoogleDrive(file,dataOp,placa){
+  if(!GOOGLE_DRIVE_UPLOAD_URL || GOOGLE_DRIVE_UPLOAD_URL.includes("COLE_AQUI")){
+    throw new Error("URL do Google Apps Script não configurada no HTML. Cole a URL do Web App em GOOGLE_DRIVE_UPLOAD_URL.");
+  }
+  const base64=await arquivoParaBase64SemPrefixo(file);
+  const payload={
+    acao:"uploadRomaneio",
+    nomeArquivo:nomeSeguroArquivo(file.name),
+    nomeOriginal:file.name,
+    mimeType:file.type||"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    base64,
+    dataOp,
+    placa:placaLimpa(placa)||"SEM_PLACA",
+    origem:"APP_EXPEDICAO_TFK"
+  };
+  const resp=await fetch(GOOGLE_DRIVE_UPLOAD_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)
+  });
+  const txt=await resp.text();
+  let json={};
+  try{json=JSON.parse(txt);}catch(e){throw new Error("Resposta inválida do Apps Script: "+txt.slice(0,180));}
+  if(!json.ok)throw new Error(json.erro||"Falha ao salvar no Google Drive.");
+  return {
+    arquivoUrl:json.url||json.downloadUrl||json.viewUrl||"",
+    arquivoPath:json.fileId||"",
+    arquivoDriveId:json.fileId||"",
+    arquivoDriveUrl:json.url||json.viewUrl||"",
+    arquivoDownloadUrl:json.downloadUrl||json.url||""
+  };
+}
+
+async function lerRomaneio(file){
+  if(typeof XLSX==="undefined"){
+    alert("Biblioteca XLSX não carregada. Verifique a internet do PDA/computador.");
+    return null;
+  }
+  const data=await file.arrayBuffer();
+  const wb=XLSX.read(data,{type:"array"});
+  const sheetName=wb.SheetNames.find(n=>n.toLowerCase().includes("vis"))||wb.SheetNames.find(n=>n.toLowerCase().includes("overview"))||wb.SheetNames[0];
+  const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:"",raw:false});
+
+  let placa=placaLimpa(buscarValorPorRotulo(rows,"placa"));
+  if(!placa)placa=placaLimpa(placaPorNomeArquivo(file.name));
+  const cliente=normalizar(buscarValorPorRotulo(rows,"cliente") || (String(file.name).toUpperCase().includes("SHEIN")?"SHEIN":""));
+  const mawbsInfo=num(buscarValorPorRotulo(rows,"número de mawb") || buscarValorPorRotulo(rows,"numero de mawb"));
+  const pacotes=num(buscarValorPorRotulo(rows,"número de pacotes") || buscarValorPorRotulo(rows,"numero de pacotes"));
+  const pecas=num(buscarValorPorRotulo(rows,"número de peças") || buscarValorPorRotulo(rows,"numero de peças"));
+  const peso=num(buscarValorPorRotulo(rows,"peso"));
+  const mawbs=extrairMawbs(rows);
+  const dataOp=extrairDataArquivo(file.name);
+
+  if(!document.getElementById("dataOperacao").value)document.getElementById("dataOperacao").value=dataOp;
+
+  const totalLacres=pacotes;
+
+  // MODO RÁPIDO: não faz upload do arquivo antes de colocar o veículo na fila.
+  // O upload do romaneio para o Google Drive roda em segundo plano depois do registro.
+  return {placa,cliente,pacotes,pecas,peso,mawbsQtd:mawbsInfo||mawbs.length,totalLacres,mawbs,arquivo:file.name,arquivoData:"",arquivoUrl:"",arquivoPath:"",arquivoUploadStatus:"AGUARDANDO_UPLOAD",data:dataOp};
+}
+
+function iniciarUploadRomaneioSegundoPlano(file,id,dataOp,placa,tentativa=1){
+  // Upload assíncrono: não trava a tela, não trava a fila e não impede novos arquivos.
+  // Quando concluir, o link do romaneio é gravado no Firestore e aparece para todos em tempo real.
+  if(!file||!id)return;
+  atualizarStatusTempoReal("wait","Upload aguardando: "+file.name);
+  const r0=registros.find(x=>x.id===id);
+  if(r0 && !r0.arquivoUrl){
+    r0.arquivoUploadStatus="ENVIANDO";
+    atualizarStatusTempoReal("wait","Upload enviando: "+file.name);
+    localStorage.setItem(storageKey(),JSON.stringify(registros));
+    salvarFirebase(true);
+    renderTudo(false);
+  }
+
+  setTimeout(async()=>{
+    try{
+      const up=await salvarRomaneioNoGoogleDrive(file,dataOp,placa);
+      const r=registros.find(x=>x.id===id);
+      if(!r)return;
+      r.arquivoUrl=up.arquivoUrl||up.arquivoDriveUrl||up.arquivoDownloadUrl||"";
+      r.arquivoPath=up.arquivoPath||"";
+      r.arquivoDriveId=up.arquivoDriveId||"";
+      r.arquivoDriveUrl=up.arquivoDriveUrl||"";
+      r.arquivoDownloadUrl=up.arquivoDownloadUrl||"";
+      r.arquivoUploadStatus="ENVIADO";
+      localStorage.setItem(storageKey(),JSON.stringify(registros));
+      await salvarFirebase(true);
+      renderTudo(false);
+      atualizarStatusTempoReal("ok","Upload concluído: "+file.name);
+      console.log("Romaneio salvo no Google Drive:",file.name);
+    }catch(e){
+      atualizarStatusTempoReal("err","Upload falhou: "+file.name);
+      console.warn("Upload do romaneio em segundo plano falhou. Tentativa",tentativa,e);
+      const r=registros.find(x=>x.id===id);
+      if(r){
+        r.arquivoUploadStatus=tentativa<3?"REENVIANDO":"FALHA_UPLOAD";
+        localStorage.setItem(storageKey(),JSON.stringify(registros));
+        salvarFirebase(true);
+        renderTudo(false);
+      }
+      // Tenta novamente automaticamente para evitar perder o arquivo por instabilidade da conexão.
+      if(tentativa<3){
+        iniciarUploadRomaneioSegundoPlano(file,id,dataOp,placa,tentativa+1);
+      }else{
+        alert("O veículo ficou salvo, mas o arquivo do romaneio não subiu para o Google Drive. Verifique a URL/permissão do Apps Script e importe novamente este romaneio. Erro: "+e.message);
+      }
+    }
+  },tentativa===1?100:2500);
+}
+
+function proximoCarro(){
+  return registros.length+1;
+}
+
+function adicionarRegistro(dados){
+  if(!dados.placa){
+    alert("Não consegui identificar a placa no romaneio. Verifique se o nome do arquivo contém a placa ou cadastre manualmente.");
+    return null;
+  }
+  const data=document.getElementById("dataOperacao").value||dados.data||hojeISO();
+  const existente=registros.find(r=>r.placa===dados.placa && r.data===data);
+  if(existente){
+    if(!confirm("Esta placa já existe na fila do dia. Deseja adicionar novamente?"))return;
+  }
+  const novoId=Date.now()+"_"+Math.random().toString(16).slice(2);
+  registros.push({
+    id: novoId,
+    data,
+    carro: proximoCarro(),
+    criadoEm: new Date().toLocaleString("pt-BR"),
+    criadoMs: Date.now(),
+    placa:dados.placa,
+    cliente:dados.cliente||"",
+    pacotes:Number(dados.pacotes||0),
+    pecas:Number(dados.pecas||0),
+    peso:Number(dados.peso||0),
+    mawbsQtd:Number(dados.mawbsQtd||0),
+    totalLacres:Number(((dados.totalLacres!==undefined&&dados.totalLacres!==null)?dados.totalLacres:dados.pacotes)),
+    mawbs:dados.mawbs||[],
+    arquivo:dados.arquivo||"",
+    arquivoData:dados.arquivoData||"",
+    arquivoUrl:dados.arquivoUrl||"",
+    arquivoPath:dados.arquivoPath||"",
+    arquivoDriveId:dados.arquivoDriveId||"",
+    arquivoDriveUrl:dados.arquivoDriveUrl||"",
+    arquivoDownloadUrl:dados.arquivoDownloadUrl||"",
+    arquivoUploadStatus:dados.arquivoUploadStatus||((dados.arquivoUrl||dados.arquivoPath)?"ENVIADO":""),
+    chegadaContainer:"",
+    conclusaoCarregamento:new Date().toTimeString().slice(0,5),
+    chegadaMotorista:"",
+    saidaMotorista:"",
+    responsavelJT:"",
+    documentoJT:"",
+    observacao:"",
+    assinatura:"",
+    status:"PENDENTE"
+  });
+  salvarLocal();
+  renderTudo();
+  mostrarResultado("ok",`Carro ${registros.length}`,dados.placa,"CARREGAMENTO FINALIZADO • AGUARDANDO RETIRADA J&T");
+  return novoId;
+}
+
+function mostrarResultado(tipo,titulo,placa,status){
+  const r=[...registros].reverse().find(x=>x.placa===placa) || registros[registros.length-1];
+  if(r){atualizarPainelStatus(r);return;}
+  const cls=tipo==="ok"?"bg-finalizado":tipo==="alerta"?"bg-alerta":"bg-erro";
+  document.getElementById("resultMain").className="result-main "+cls;
+  document.getElementById("resultMain").innerHTML=`<div class="result-icon">🚚</div><div><div class="result-title">${titulo}</div><div class="result-sub">${placa}</div><div class="result-details"><div><div class="detail-label">Fila</div><div class="detail-value">${registros.length} veículo(s)</div></div><div><div class="detail-label">Última placa</div><div class="detail-value">${placa}</div></div><div><div class="detail-label">Status</div><div class="detail-value">${status}</div></div></div></div>`;
+}
+
+document.getElementById("romaneioInput").addEventListener("change",async e=>{
+  const files=[...e.target.files];
+  if(!files.length)return;
+  document.getElementById("fileName").innerText="Carregando: "+files.map(f=>f.name).join(", ");
+  atualizarStatusTempoReal("wait","Lendo arquivo(s)...");
+  for(const file of files){
+    try{
+      const dados=await lerRomaneio(file);
+      if(dados){
+        const novoId=adicionarRegistro(dados);
+        atualizarStatusTempoReal("wait","Registro criado no banco; upload em segundo plano");
+        iniciarUploadRomaneioSegundoPlano(file,novoId,dados.data,dados.placa);
+      }
+      document.getElementById("fileName").innerText=files.map(f=>f.name).join(", ");
+    }catch(err){
+      console.error(err);
+      alert("Erro ao importar "+file.name+": "+err.message);
+    }
+  }
+  e.target.value="";
+});
+
+function salvarAssinaturaAtual(id){
+  const r=registros.find(x=>x.id===id);
+  const canvas=document.getElementById("canvas_"+id);
+  if(r && canvas){
+    try{
+      const data=canvas.toDataURL("image/png");
+      if(data)r.assinatura=data;
+    }catch(err){}
+  }
+}
+
+function atualizarCampo(id,campo,valor){
+  salvarAssinaturaAtual(id);
+  const r=registros.find(x=>x.id===id); 
+  if(!r)return;
+  r[campo]=valor;
+  if(r.assinatura && r.responsavelJT && r.chegadaMotorista && r.saidaMotorista)r.status="ASSINADO";
+  else r.status="PENDENTE";
+  salvarLocal();
+  renderTudo(false);
+  setTimeout(inicializarCanvas,50);
+}
+function confirmarJT(id){
+  const r=registros.find(x=>x.id===id);
+  if(!r)return;
+
+  // Força salvar qualquer informação digitada no card antes da validação.
+  // Isso evita precisar clicar 2x quando o operador digita o nome e já clica em Confirmar J&T.
+  const btn=document.querySelector(`button[onclick="confirmarJT('${id}')"]`);
+  const card=btn ? btn.closest(".vehicle-card") : null;
+
+  if(card){
+    const inputs=[...card.querySelectorAll("input")];
+
+    inputs.forEach(inp=>{
+      const onchange=String(inp.getAttribute("onchange")||"");
+      const m=onchange.match(/atualizarCampo\('[^']+','([^']+)'/);
+      if(m && m[1]){
+        r[m[1]]=inp.value;
+      }
+    });
+  }
+
+  // Força leitura do canvas antes de validar
+  const canvasEl=document.getElementById("canvas_"+id);
+  if(canvasEl){
+    try{
+      const data=canvasEl.toDataURL("image/png");
+      if(data&&data.length>1000)r.assinatura=data;
+    }catch(err){}
+  }
+
+  if(!r.responsavelJT || !String(r.responsavelJT).trim()){
+    alert("Informe o nome do motorista J&T antes de confirmar.");
+    return;
+  }
+  if(!r.chegadaMotorista || !String(r.chegadaMotorista).trim()){
+    alert("Informe a chegada do motorista.");
+    return;
+  }
+  if(!r.assinatura){
+    alert("Solicite a assinatura do motorista J&T antes de confirmar.");
+    return;
+  }
+
+  // Saída Motorista - J&T automática no primeiro clique de confirmação.
+  r.saidaMotorista=new Date().toTimeString().slice(0,5);
+  r.status="ASSINADO";
+  r.confirmadoEm=new Date().toLocaleString("pt-BR");
+
+  salvarLocal();
+  atualizarPainelStatus(r);
+  renderTudo();
+}
+function limparAssinatura(id){
+  const canvas=document.getElementById("canvas_"+id);
+  if(canvas){
+    const ctx=canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  const r=registros.find(x=>x.id===id);
+  if(r){
+    r.assinatura="";
+    r.status="PENDENTE";
+    salvarLocal();
+    renderTudo();
+  }
+}
+function removerRegistro(id){
+  if(!confirm("Remover este veículo da fila?"))return;
+  registros=registros.filter(r=>r.id!==id);
+  registros.forEach((r,i)=>r.carro=i+1);
+  salvarLocal();renderTudo();
+}
+
+
+function minutosHora(h){
+  if(!h)return null;
+  const p=String(h).split(":");
+  if(p.length<2)return null;
+  return Number(p[0])*60+Number(p[1]);
+}
+function tempoPermanencia(r){
+  const ini=minutosHora(r.chegadaMotorista);
+  const fim=minutosHora(r.saidaMotorista);
+  if(ini===null||fim===null)return "EM ANDAMENTO";
+  let diff=fim-ini;
+  if(diff<0)diff+=24*60;
+  const hh=String(Math.floor(diff/60)).padStart(2,"0");
+  const mm=String(diff%60).padStart(2,"0");
+  return `${hh}:${mm}`;
+}
+function minutosPermanencia(r){
+  const ini=minutosHora(r.conclusaoCarregamento);
+  const fim=minutosHora(r.saidaMotorista);
+  if(ini===null||fim===null)return null;
+  let diff=fim-ini;
+  if(diff<0)diff+=24*60;
+  return diff;
+}
+
+function statusHistorico(r){
+  return (r.status==="ASSINADO" && r.assinatura) ? "VEÍCULO RETIRADO" : "AGUARDANDO RETIRADA";
+}
+function statusOperacional(r){
+  if(r.status==="ASSINADO" && r.assinatura){
+    return {classe:"bg-ok",titulo:"VEÍCULO LIBERADO",sub:"RETIRADA CONCLUÍDA",tag:"ASSINADO J&T",tagClass:"tag-ok"};
+  }
+  if(r.chegadaMotorista){
+    return {classe:"bg-alerta",titulo:"MOTORISTA J&T PRESENTE",sub:"AGUARDANDO ASSINATURA",tag:"AGUARDANDO ASSINATURA",tagClass:"tag-pendente"};
+  }
+  return {classe:"bg-finalizado",titulo:"CARREGAMENTO FINALIZADO",sub:"AGUARDANDO RETIRADA J&T",tag:"AGUARDANDO RETIRADA J&T",tagClass:"tag-pendente"};
+}
+function calcularTempoAguardando(r){
+  // Tempo desde conclusão do carregamento até agora (se ainda não chegou J&T)
+  if(!r.conclusaoCarregamento)return null;
+  if(r.chegadaMotorista)return null; // J&T já chegou
+  const [h,m]=r.conclusaoCarregamento.split(":").map(Number);
+  const now=new Date();
+  const inicio=new Date();
+  inicio.setHours(h,m,0,0);
+  let diff=Math.floor((now-inicio)/60000);
+  if(diff<0)diff+=24*60;
+  return `${String(Math.floor(diff/60)).padStart(2,"0")}:${String(diff%60).padStart(2,"0")}`;
+}
+
+let _timerPainel=null;
+function atualizarPainelStatus(r){
+  if(!r)return;
+  if(_timerPainel)clearInterval(_timerPainel);
+  const st=statusOperacional(r);
+  const tempoAg=calcularTempoAguardando(r);
+  const mostrarTimer=tempoAg!==null;
+
+  function render(){
+    const ta=calcularTempoAguardando(r);
+    const tempoLabel=r.chegadaMotorista
+      ?tempoPermanencia(r)
+      :(ta?`<span id="timerAguardo" style="font-size:28px;color:#fff;font-weight:1000">${ta}</span>`:"--:--");
+    const detalheLabel=r.chegadaMotorista?"Tempo J&T":"⏱ Aguardando há";
+    document.getElementById("resultMain").className="result-main "+st.classe;
+    document.getElementById("resultMain").innerHTML=`
+      <div class="result-icon">🚚</div>
+      <div style="width:100%">
+        <div class="result-title">${st.titulo}</div>
+        <div class="result-sub">${st.sub}</div>
+        <div class="result-details">
+          <div><div class="detail-label">Carro / Cliente</div><div class="detail-value">Carro ${r.carro}<br>${r.cliente||"-"}</div></div>
+          <div><div class="detail-label">Placa / Destino</div><div class="detail-value">${r.placa}<br>J&T</div></div>
+          <div><div class="detail-label">Conclusão ANJUN</div><div class="detail-value">${r.conclusaoCarregamento||"-"}</div></div>
+          <div><div class="detail-label">${detalheLabel}</div><div class="detail-value">${tempoLabel}</div></div>
+          <div><div class="detail-label">Status</div><div class="detail-value">${r.status||"-"}</div></div>
+          ${r.responsavelJT?`<div><div class="detail-label">Motorista J&T</div><div class="detail-value">${r.responsavelJT}</div></div>`:""}
+        </div>
+      </div>`;
+  }
+  render();
+  if(mostrarTimer){
+    _timerPainel=setInterval(render,60000);
+  }
+}
+
+function pesquisarCarro(){
+  const sel=document.getElementById("selectCarro");
+  const id=sel.value;
+  if(!id){return;}
+  const r=registros.find(x=>x.id===id);
+  if(r)atualizarPainelStatus(r);
+}
+
+function atualizarSelectCarro(){
+  const sel=document.getElementById("selectCarro");
+  if(!sel)return;
+  const val=sel.value;
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  registros.forEach(r=>{
+    const st=r.status==="ASSINADO"?"✓":"⏳";
+    const opt=document.createElement("option");
+    opt.value=r.id;
+    opt.textContent=`${st} Carro ${r.carro} • ${r.placa} • ${r.cliente||""}`;
+    sel.appendChild(opt);
+  });
+  sel.value=val;
+}
+
+function htmlRomaneio(r){
+  const nome=r.arquivo||"Romaneio";
+  if(r.arquivoUrl||r.arquivoDriveUrl||r.arquivoDownloadUrl||r.arquivoData){
+    const link=r.arquivoUrl||r.arquivoDriveUrl||r.arquivoDownloadUrl||r.arquivoData;
+    return `<a href="${link}" download="${nome}" target="_blank" style="font-weight:1000;color:#0b2545;text-decoration:underline">Abrir romaneio</a><br><span style="font-size:10px;color:#009846;font-weight:1000">${nome}</span>`;
+  }
+  const st=r.arquivoUploadStatus||"";
+  if(st==="ENVIANDO"||st==="REENVIANDO"||st==="AGUARDANDO_UPLOAD"){
+    return `<span style="font-weight:1000;color:#f97316">Salvando arquivo...</span><br><span style="font-size:10px;color:#64748b">${nome}</span>`;
+  }
+  if(st==="FALHA_UPLOAD"){
+    return `<span style="font-weight:1000;color:#dc2626">Arquivo não salvo no Drive</span><br><span style="font-size:10px;color:#64748b">${nome}</span>`;
+  }
+  return nome;
+}
+
+function renderTudo(redesenhar=true){
+  registros.sort((a,b)=>a.carro-b.carro);
+  atualizarSelectCarro();
+  const totalVeiculos=registros.length;
+  const assinados=registros.filter(r=>r.status==="ASSINADO").length;
+  const pendentes=totalVeiculos-assinados;
+  const pacotes=registros.reduce((s,r)=>s+Number(r.pacotes||0),0);
+  const pecas=registros.reduce((s,r)=>s+Number(r.pecas||0),0);
+  const peso=registros.reduce((s,r)=>s+Number(r.peso||0),0); const tempos=registros.map(minutosPermanencia).filter(v=>v!==null); const media=tempos.length?Math.round(tempos.reduce((a,b)=>a+b,0)/tempos.length):null;
+
+  document.getElementById("mVeiculos").innerText=fmt(totalVeiculos);
+  document.getElementById("mAssinados").innerText=fmt(assinados);
+  document.getElementById("mPendentes").innerText=fmt(pendentes);
+  document.getElementById("mPacotes").innerText=fmt(pacotes);
+  document.getElementById("mPecas").innerText=fmt(pecas);
+  document.getElementById("mPeso").innerText=fmtPeso(peso); if(document.getElementById("mTempoMedio"))document.getElementById("mTempoMedio").innerText=media===null?"--:--":String(Math.floor(media/60)).padStart(2,"0")+":"+String(media%60).padStart(2,"0");
+  document.getElementById("sideVeiculos").innerText=fmt(totalVeiculos);
+  document.getElementById("sidePendentes").innerText=fmt(pendentes);
+
+  const lista=document.getElementById("listaVeiculos");
+  const filaRetirada=registros.filter(r=>!(r.status==="ASSINADO" && r.assinatura));
+  if(!filaRetirada.length){
+    lista.innerHTML='<div class="empty">Nenhum veículo aguardando retirada J&T.</div>';
+  }else{
+    lista.innerHTML=filaRetirada.map(r=>cardVeiculo(r)).join("");
+  }
+
+  const body=document.getElementById("historicoBody");
+  body.innerHTML=registros.length?registros.map(r=>`<tr><td>Carro ${r.carro}</td><td><strong>${r.placa}</strong></td><td>${r.cliente}</td><td>J&T</td><td>${fmt(r.pacotes)}</td><td>${fmt(r.pecas)}</td><td>${fmtPeso(r.peso)}</td><td>${fmt(r.mawbsQtd||0)}</td><td>${fmt(((r.totalLacres!==undefined&&r.totalLacres!==null)?r.totalLacres:r.pacotes))}</td><td>${htmlRomaneio(r)}</td><td>${r.conclusaoCarregamento||""}</td><td>${r.chegadaMotorista||""}</td><td>${r.saidaMotorista||""}</td><td>${r.responsavelJT||""}</td><td>${r.assinatura?`<img src="${r.assinatura}" style="width:120px;height:44px;object-fit:contain;border:1px solid #ddd;background:white;pointer-events:none;user-select:none" draggable="false" oncontextmenu="return false">`:""}</td><td>${tempoPermanencia(r)}</td><td>${statusHistorico(r)}</td></tr>`).join(""):'<tr><td colspan="17">Nenhum registro.</td></tr>';
+
+  if(redesenhar)setTimeout(inicializarCanvas,50);
+}
+
+function cardVeiculo(r){
+  const st=statusOperacional(r); const tag=`<span class="tag ${st.tagClass}">${st.tag}</span>`;
+  return `<div class="vehicle-card">
+    <div class="vehicle-head">
+      <div><div class="carro-badge">Carro ${r.carro}</div><div style="margin-top:8px;text-align:center;font-weight:1000;color:#0b2545">${r.cliente||"-"}</div><div style="margin-top:4px;text-align:center;font-size:12px;font-weight:1000;color:#009846">Destino: J&T</div></div>
+      <div>
+        <div class="placa">${r.placa}</div>
+        <div class="subinfo">Destino: J&T • ${r.arquivo||"Sem arquivo"} • Registro: ${r.criadoEm}</div><div style="font-weight:1000;color:#0b2545;margin-top:6px">${st.titulo} • ${st.sub}</div>
+        ${tag}<span class="tag tag-info">${fmt(r.pacotes)} pacotes</span><span class="tag tag-info">${fmt(r.pecas)} peças</span><span class="tag tag-info">${fmtPeso(r.peso)} kg</span><span class="tag tag-info">${fmt(((r.totalLacres!==undefined&&r.totalLacres!==null)?r.totalLacres:r.pacotes))} lacres</span><span class="tag tag-info">Tempo: ${tempoPermanencia(r)}</span>
+      </div>
+      <div class="btns">
+        <button class="btn pdf" onclick="exportarPDFVeiculo('${r.id}')">PDF</button>
+        <button class="btn gray" onclick="removerRegistro('${r.id}')">Remover</button>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Conclusão Carregamento - ANJUN</label><input class="time-input" type="time" value="${r.conclusaoCarregamento||""}" onchange="atualizarCampo('${r.id}','conclusaoCarregamento',this.value)"></div>
+      <div class="field"><label>Chegada Motorista - J&T</label><input class="time-input" type="time" value="${r.chegadaMotorista||""}" onchange="atualizarCampo('${r.id}','chegadaMotorista',this.value)"></div>
+      <div class="field"><label>Nome do Motorista J&T</label><input class="text-input" value="${r.responsavelJT||""}" placeholder="Nome do responsável" onchange="atualizarCampo('${r.id}','responsavelJT',this.value)"></div>
+      <div class="field"><label>Documento/Matrícula J&T</label><input class="text-input" value="${r.documentoJT||""}" placeholder="Opcional" onchange="atualizarCampo('${r.id}','documentoJT',this.value)"></div>
+      <div class="field"><label>MAWBs</label><input class="text-input" value="${r.mawbsQtd||0}" readonly></div>
+      <div class="field"><label>Total de Lacres</label><input class="text-input" value="${((r.totalLacres!==undefined&&r.totalLacres!==null)?r.totalLacres:r.pacotes)}" readonly></div>
+      <div class="field"><label>Status</label><input class="text-input" value="${r.status}" readonly></div>
+      <div class="field full"><label>Observação</label><input class="text-input" value="${r.observacao||""}" placeholder="Observações operacionais" onchange="atualizarCampo('${r.id}','observacao',this.value)"></div>
+    </div>
+    <div class="signature-area">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px"><strong>Assinatura do motorista J&T</strong><div class="btns"><button class="btn gray" onclick="limparAssinatura('${r.id}')">Limpar assinatura</button><button type="button" class="btn green" onclick="confirmarJT('${r.id}')">Confirmar J&T</button></div></div>
+      <canvas id="canvas_${r.id}" class="signature-canvas" data-assinatura="${r.assinatura||""}"></canvas>
+    </div>
+  </div>`;
+}
+
+function inicializarCanvas(){
+  document.querySelectorAll("canvas.signature-canvas").forEach(canvas=>{
+    if(canvas.dataset.bound==="1")return;
+
+    const rect=canvas.getBoundingClientRect();
+    const largura=Math.max(rect.width,300);
+    const altura=180;
+    const ratio=window.devicePixelRatio||1;
+
+    canvas.width=largura*ratio;
+    canvas.height=altura*ratio;
+    canvas.style.width="100%";
+    canvas.style.height=altura+"px";
+    canvas.style.touchAction="none";
+
+    const ctx=canvas.getContext("2d");
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    ctx.lineWidth=2.5;
+    ctx.lineCap="round";
+    ctx.lineJoin="round";
+    ctx.strokeStyle="#0b2545";
+
+    const id=canvas.id.replace("canvas_","");
+    const r=registros.find(x=>x.id===id);
+    const imgData=(r&&r.assinatura)?r.assinatura:canvas.dataset.assinatura;
+
+    if(imgData){
+      const img=new Image();
+      img.onload=()=>ctx.drawImage(img,0,0,largura,altura);
+      img.src=imgData;
+    }
+
+    let ativo=false;
+
+    function getPoint(e){
+      const box=canvas.getBoundingClientRect();
+      const p=e.touches && e.touches.length ? e.touches[0] : e;
+      return {x:p.clientX-box.left,y:p.clientY-box.top};
+    }
+
+    function iniciar(e){
+      if(e.cancelable)e.preventDefault();
+      ativo=true;
+      const p=getPoint(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x,p.y);
+    }
+
+    function mover(e){
+      if(!ativo)return;
+      if(e.cancelable)e.preventDefault();
+      const p=getPoint(e);
+      ctx.lineTo(p.x,p.y);
+      ctx.stroke();
+    }
+
+    function finalizar(e){
+      if(!ativo)return;
+      if(e && e.cancelable)e.preventDefault();
+      ativo=false;
+      ctx.closePath();
+      try{
+        const rr=registros.find(x=>x.id===id);
+        if(rr){
+          rr.assinatura=canvas.toDataURL("image/png");
+          salvarLocal();
+        }
+      }catch(err){}
+    }
+
+    if(window.PointerEvent){
+      canvas.addEventListener("pointerdown",iniciar,{passive:false});
+      canvas.addEventListener("pointermove",mover,{passive:false});
+      canvas.addEventListener("pointerup",finalizar,{passive:false});
+      canvas.addEventListener("pointercancel",finalizar,{passive:false});
+      canvas.addEventListener("pointerleave",finalizar,{passive:false});
+    }else{
+      canvas.addEventListener("mousedown",iniciar,{passive:false});
+      canvas.addEventListener("mousemove",mover,{passive:false});
+      window.addEventListener("mouseup",finalizar,{passive:false});
+      canvas.addEventListener("touchstart",iniciar,{passive:false});
+      canvas.addEventListener("touchmove",mover,{passive:false});
+      canvas.addEventListener("touchend",finalizar,{passive:false});
+      canvas.addEventListener("touchcancel",finalizar,{passive:false});
+    }
+
+    canvas.dataset.bound="1";
+  });
+}
+async function garantirFirebaseZerado(iso,clearSeq){
+  if(!window.db)return;
+  const ref=db.collection("expedicao_diaria").doc(iso);
+  const payload={
+    data:iso,
+    dataBR:dataBR(iso),
+    clearSeq:clearSeq,
+    totalVeiculos:0,
+    assinados:0,
+    totalPacotes:0,
+    totalPecas:0,
+    totalPeso:0,
+    registros:[],
+    apagadoDefinitivo:true,
+    apagadoEm:new Date().toISOString(),
+    atualizadoEm:new Date().toISOString(),
+    origemApagamento:"APP_EXPEDICAO_TFK"
+  };
+
+  // Gravação principal, substituindo o documento inteiro.
+  await ref.set(payload,{merge:false});
+
+  // Confirma no servidor. Se algum aparelho antigo regravar cache imediatamente,
+  // o app força o zeramento novamente.
+  try{
+    await new Promise(resolve=>setTimeout(resolve,700));
+    const snap=await ref.get({source:"server"});
+    const d=snap.exists?(snap.data()||{}):{};
+    const regs=Array.isArray(d.registros)?d.registros:[];
+    if(regs.length>0 || d.apagadoDefinitivo!==true || Number(d.clearSeq||0)<clearSeq){
+      await ref.set(payload,{merge:false});
+    }
+  }catch(e){
+    console.warn("Não foi possível confirmar zeramento no servidor:",e);
+  }
+}
+
+async function limparDia(){
+  const iso=document.getElementById("dataOperacao")?.value||hojeISO();
+  const msg="⚠ ATENÇÃO - APAGAR DEFINITIVAMENTE\n\n"+
+    "Você vai apagar TODOS os veículos, histórico e dados da data " + dataBR(iso) + ".\n\n"+
+    "A tela será zerada agora e o Firebase será zerado online para todos os usuários.\n"+
+    "Use somente quando realmente quiser encerrar/limpar o dia.\n\n"+
+    "Deseja continuar?";
+  if(!confirm(msg))return;
+
+  const confirma=prompt("Para confirmar a exclusão definitiva, digite APAGAR");
+  if(String(confirma||"").trim().toUpperCase()!=="APAGAR"){
+    alert("Exclusão cancelada.");
+    return;
+  }
+
+  const clearSeq=Date.now();
+  _limpandoFirebase=true;
+  _ultimoClearLocal=clearSeq;
+
+  try{
+    atualizarStatusTempoReal("wait","Apagando dados no Firebase...");
+
+    if(_salvarFirebaseTimer){clearTimeout(_salvarFirebaseTimer);_salvarFirebaseTimer=null;}
+    if(_unsubscribeFirebase){_unsubscribeFirebase();_unsubscribeFirebase=null;}
+
+    // 1) Zera imediatamente o aparelho atual.
+    setClearSeq(clearSeq);
+    registros=[];
+    limparCacheDataSelecionada();
+    setClearSeq(clearSeq);
+    renderTudo();
+    zerarPainelInformativo();
+    const fn=document.getElementById("fileName"); if(fn)fn.innerText="Nenhum arquivo selecionado";
+    const inp=document.getElementById("romaneioInput"); if(inp)inp.value="";
+    const sel=document.getElementById("selectCarro"); if(sel)sel.value="";
+
+    // 2) Zera a fonte oficial no Firestore e confirma no servidor.
+    if(!window.db)throw new Error("Firebase/Firestore não conectado.");
+    await garantirFirebaseZerado(iso,clearSeq);
+
+    // 3) Reabre o listener já com a data zerada.
+    _limpandoFirebase=false;
+    carregarDoFirebase();
+    atualizarStatusTempoReal("ok","Firebase zerado online: 0 veículo(s)");
+    alert("Dados do dia apagados com sucesso. Veículos do dia: 0.");
+
+    // 4) Arquivos do Google Drive são apagados em segundo plano para não travar a tela.
+    atualizarStatusTempoReal("wait","Limpando arquivos do Google Drive em segundo plano...");
+    apagarRomaneiosGoogleDriveDaData(iso)
+      .then(()=>atualizarStatusTempoReal("ok","Firebase zerado; Drive processado"))
+      .catch(()=>atualizarStatusTempoReal("ok","Firebase zerado; Drive não bloqueou"));
+
+  }catch(e){
+    console.error("Erro ao apagar dados do dia:",e);
+    _limpandoFirebase=false;
+    carregarDoFirebase();
+    atualizarStatusTempoReal("err","Erro ao apagar no Firebase");
+    alert("Não foi possível apagar no Firebase. Erro: "+e.message);
+  }
+}
+function gerarHTMLPDF(titulo, conteudo){
+  return `<html><head><title>${titulo}</title><style>
+@page{size:A4 portrait;margin:8mm}
+body{font-family:Arial;padding:8px;color:#12213a}.header-pdf{display:flex;align-items:center;gap:14px;border-bottom:3px solid #009846;padding-bottom:10px;margin-bottom:14px}.header-pdf img{height:44px;max-width:130px;object-fit:contain}.header-pdf h1{margin:0;color:#0b2545;font-size:17px}.header-pdf .sub{font-size:11px;color:#475569;margin-top:3px;font-weight:700}.resumo{margin:6px 0 12px;padding:6px 10px;background:#f3f6fb;border-radius:8px;font-weight:700;font-size:11px}table{width:100%;border-collapse:collapse;margin-bottom:12px;table-layout:fixed}th,td{border:1px solid #ddd;padding:3px 2px;text-align:center;font-size:8px;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;line-height:1.2}th{background:#f3f6fb}.assinatura{border:1px solid #ddd;max-width:80px;max-height:36px;margin-top:2px}
+</style></head><body><div class="header-pdf"><img src="${document.querySelector('.logo img')?.src||''}"><div><h1>CONTROLE DE EXPEDIÇÃO TFK</h1><div class="sub">${titulo}</div></div></div>${conteudo}<p style="margin-top:28px">Gerado em ${new Date().toLocaleString("pt-BR")}</p></body></html>`;
+}
+
+function abrirPDF(html){
+  const w=window.open("","_blank");
+  w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),500);
+}
+
+function exportarPDFVeiculo(id){
+  const r=registros.find(x=>x.id===id);if(!r)return;
+  const titulo=`Comprovante de Expedição - Carro ${r.carro} - ${r.placa}`;
+  let conteudo=`<div class="resumo"><strong>Carro ${r.carro}</strong> • Placa ${r.placa} • Status ${r.status}</div>
+  <table><tbody>
+  <tr><th>Data</th><td>${dataBR(r.data)}</td><th>Cliente</th><td>${r.cliente}</td></tr>
+  <tr><th>Pacotes</th><td>${fmt(r.pacotes)}</td><th>Peças</th><td>${fmt(r.pecas)}</td></tr>
+  <tr><th>Peso KG</th><td>${fmtPeso(r.peso)}</td><th>MAWBs</th><td>${r.mawbsQtd}</td></tr><tr><th>Total de Lacres</th><td>${fmt(((r.totalLacres!==undefined&&r.totalLacres!==null)?r.totalLacres:r.pacotes))}</td><th>Arquivo Romaneio</th><td>${r.arquivo||""}</td></tr>
+  <tr><th>Conclusão Carregamento</th><td>${r.conclusaoCarregamento||""}</td><th>Destino</th><td>J&T</td></tr>
+  <tr><th>Chegada Motorista J&T</th><td>${r.chegadaMotorista||""}</td><th>Saída Motorista J&T</th><td>${r.saidaMotorista||""}</td></tr>
+  <tr><th>Nome do Motorista J&T</th><td>${r.responsavelJT||""}</td><th>Documento/Matrícula</th><td>${r.documentoJT||""}</td></tr>
+  <tr><th>Observação</th><td colspan="3">${r.observacao||""}</td></tr>
+  </tbody></table>`;
+  if(r.assinatura)conteudo+=`<h3>Assinatura do motorista J&T</h3><img class="assinatura" src="${r.assinatura}" draggable="false" oncontextmenu="return false">`;
+  abrirPDF(gerarHTMLPDF(titulo,conteudo));
+}
+
+function exportarPDFDia(){
+  const data=document.getElementById("dataOperacao").value||hojeISO();
+  const titulo=`Expedição TFK - ${dataBR(data)}`;
+  let conteudo=`<div class="resumo">Veículos: ${registros.length} • Assinados: ${registros.filter(r=>r.status==="ASSINADO").length} • Pacotes: ${fmt(registros.reduce((s,r)=>s+r.pacotes,0))} • Peças: ${fmt(registros.reduce((s,r)=>s+r.pecas,0))} • Peso: ${fmtPeso(registros.reduce((s,r)=>s+r.peso,0))} kg</div>`;
+  conteudo+=`<table><thead><tr><th>Carro</th><th>Placa</th><th>Cliente</th><th>Destino</th><th>Pacotes</th><th>Peças</th><th>Peso KG</th><th>MAWBs</th><th>Total de Lacres</th><th>Romaneio</th><th>Conclusão ANJUN</th><th>Chegada J&T</th><th>Saída J&T</th><th>Motorista J&T</th><th>Assinatura</th><th>Tempo</th><th>Status</th></tr></thead><tbody>`;
+  registros.forEach(r=>conteudo+=`<tr><td>Carro ${r.carro}</td><td>${r.placa}</td><td>${r.cliente}</td><td>${fmt(r.pacotes)}</td><td>${fmt(r.pecas)}</td><td>${fmtPeso(r.peso)}</td><td>${fmt(((r.totalLacres!==undefined&&r.totalLacres!==null)?r.totalLacres:r.pacotes))}</td><td>${r.chegadaMotorista||""}</td><td>${r.saidaMotorista||""}</td><td>${r.status}</td></tr>`);
+  conteudo+=`</tbody></table>`;
+  abrirPDF(gerarHTMLPDF(titulo,conteudo));
+}
+
+
+function tabelaDetalhadaRegistros(lista){
+  let h=`<table class="tabela-pdf"><colgroup><col class="col-carro"><col class="col-placa"><col class="col-cliente"><col class="col-destino"><col class="col-mawb"><col class="col-lacres"><col class="col-pacotes"><col class="col-pecas"><col class="col-peso"><col class="col-turno"><col class="col-anjun"><col class="col-chegada"><col class="col-saida"><col class="col-motorista"><col class="col-ass"><col class="col-tempo"><col class="col-status"></colgroup><thead><tr><th>Carro</th><th>Placa</th><th>Cliente</th><th>Destino</th><th>MAWBs</th><th>Lacres</th><th>Pacotes</th><th>Peças</th><th>Peso KG</th><th>Turno</th><th>Conclusão ANJUN</th><th>Chegada J&T</th><th>Saída J&T</th><th>Motorista J&T</th><th>Assinatura</th><th>Tempo</th><th>Status</th></tr></thead><tbody>`;
+  if(!lista.length){
+    h+=`<tr><td colspan="17">Nenhum registro.</td></tr>`;
+  }else{
+    lista.forEach(r=>{
+      h+=`<tr><td>Carro ${r.carro}</td><td><strong>${r.placa}</strong></td><td>${r.cliente||""}</td><td>J&T</td><td>${fmt(r.mawbsQtd||0)}</td><td>${fmt(((r.totalLacres!==undefined&&r.totalLacres!==null)?r.totalLacres:r.pacotes))}</td><td>${fmt(r.pacotes)}</td><td>${fmt(r.pecas)}</td><td>${fmtPeso(r.peso)}</td><td>${labelTurnoByHora(r.conclusaoCarregamento||"")}</td><td>${r.conclusaoCarregamento||""}</td><td>${r.chegadaMotorista||""}</td><td>${r.saidaMotorista||""}</td><td>${r.responsavelJT||""}</td><td>${r.assinatura?`<img class="assinatura-mini" src="${r.assinatura}">`:""}</td><td>${tempoPermanencia(r)}</td><td>${statusHistorico(r)}</td></tr>`;
+    });
+  }
+  h+=`</tbody></table>`;
+  return h;
+}
+function gerarHTMLPDF(titulo, conteudo){
+  return `<html><head><title>${titulo}</title><style>
+@page{size:A4 landscape;margin:5mm}
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;padding:0;color:#12213a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.header-pdf{display:flex;align-items:center;gap:14px;border-bottom:3px solid #009846;padding-bottom:8px;margin-bottom:10px}
+.header-pdf img{height:42px;max-width:130px;object-fit:contain}.header-pdf h1{margin:0;color:#0b2545;font-size:17px}.header-pdf .sub{font-size:10px;color:#475569;margin-top:3px;font-weight:700}.resumo{margin:6px 0 10px;padding:7px 9px;background:#f3f6fb;border-radius:8px;font-weight:700;font-size:9.5px;line-height:1.35}.turno-title{color:#0b2545;border-bottom:2px solid #009846;padding-bottom:4px;margin:12px 0 6px;font-size:12px}.turno-title.cinza{color:#64748b;border-bottom:1px solid #ddd}
+table{width:100%;border-collapse:collapse;margin-bottom:8px;table-layout:fixed;page-break-inside:auto}tr{page-break-inside:avoid;page-break-after:auto}th,td{border:1px solid #d9e1ea;padding:3px 2px;text-align:center;font-size:7.2px;vertical-align:middle;word-wrap:break-word;overflow-wrap:anywhere;line-height:1.12}th{background:#f3f6fb;color:#0b2545;font-weight:800}.assinatura{border:1px solid #ddd;max-width:220px;max-height:70px;margin-top:6px}.assinatura-mini{width:58px;height:22px;object-fit:contain;border:1px solid #ddd;background:white}.nowrap{white-space:nowrap}.col-carro{width:5%}.col-placa{width:6%}.col-cliente{width:8%}.col-destino{width:4.5%}.col-mawb{width:5%}.col-lacres{width:5.5%}.col-pacotes{width:5%}.col-pecas{width:5%}.col-peso{width:5.8%}.col-turno{width:7%}.col-anjun{width:6.2%}.col-chegada{width:6.2%}.col-saida{width:6.2%}.col-motorista{width:8.5%}.col-ass{width:6.5%}.col-tempo{width:6%}.col-status{width:9%}
+</style></head><body><div class="header-pdf"><img src="${document.querySelector('.logo img')?.src||''}"><div><h1>CONTROLE DE EXPEDIÇÃO TFK</h1><div class="sub">${titulo}</div><div class="sub">${resumoTurnosPDF()}</div><div class="sub">Gerado em ${new Date().toLocaleString("pt-BR")}</div></div></div>${conteudo}</body></html>`;
+}
+function exportarPDFVeiculo(id){
+  const r=registros.find(x=>x.id===id);if(!r)return;
+  const titulo=`Comprovante de Expedição - Carro ${r.carro} - ${r.placa}`;
+  let conteudo=`<div class="resumo"><strong>Carro ${r.carro}</strong> • Placa ${r.placa} • Cliente ${r.cliente||""} • Destino: J&T • Turno: ${labelTurnoByHora(r.conclusaoCarregamento||"")} • ${statusOperacional(r).titulo} / ${statusOperacional(r).sub}</div>`;
+  conteudo+=tabelaDetalhadaRegistros([r]);
+  conteudo+=`<h3>Dados complementares</h3><table><tbody><tr><th>Data</th><td>${dataBR(r.data)}</td><th>Arquivo Romaneio</th><td>${r.arquivo||""}</td></tr><tr><th>Documento/Matrícula J&T</th><td>${r.documentoJT||""}</td><th>Data/Hora Assinatura</th><td>${r.confirmadoEm||""}</td></tr><tr><th>Observação</th><td colspan="3">${r.observacao||""}</td></tr></tbody></table>`;
+  if(r.assinatura)conteudo+=`<h3>Assinatura do motorista J&T</h3><img class="assinatura" src="${r.assinatura}" draggable="false" oncontextmenu="return false">`;
+  abrirPDF(gerarHTMLPDF(titulo,conteudo));
+}
+function exportarPDFDia(){
+  const data=document.getElementById("dataOperacao").value||hojeISO();
+  const titulo=`Expedição TFK - ${dataBR(data)}`;
+  const tempos=registros.map(minutosPermanencia).filter(v=>v!==null);
+  const media=tempos.length?Math.round(tempos.reduce((a,b)=>a+b,0)/tempos.length):null;
+  let conteudo=`<div class="resumo">Veículos: ${registros.length} • Assinados: ${registros.filter(r=>r.status==="ASSINADO").length} • Pacotes: ${fmt(registros.reduce((s,r)=>s+r.pacotes,0))} • Peças: ${fmt(registros.reduce((s,r)=>s+r.pecas,0))} • Peso: ${fmtPeso(registros.reduce((s,r)=>s+r.peso,0))} kg • Tempo médio: ${media===null?"--:--":String(Math.floor(media/60)).padStart(2,"0")+":"+String(media%60).padStart(2,"0")}</div>`;
+  conteudo+=tabelaPorTurnoPDF(registros);
+  abrirPDF(gerarHTMLPDF(titulo,conteudo));
+}
+function exportarHistoricoDia(){
+  exportarPDFDia();
+}
+
+function tick(){const d=new Date();document.getElementById("dataHoje").innerText=d.toLocaleDateString("pt-BR");document.getElementById("horaAtual").innerText=d.toLocaleTimeString("pt-BR")}
+document.getElementById("dataOperacao").value=hojeISO();
+document.addEventListener('contextmenu',e=>{if(e.target&&e.target.tagName==='IMG'&&String(e.target.src||'').startsWith('data:image'))e.preventDefault();});
+setInterval(tick,1000);tick();
+
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
+const firebaseConfig={apiKey:"AIzaSyCjBYYsOlYvziwwaMToIrFQeq-De2muWho",authDomain:"appexpedicaotfk.firebaseapp.com",projectId:"appexpedicaotfk",storageBucket:"appexpedicaotfk.firebasestorage.app",messagingSenderId:"889525302456",appId:"1:889525302456:web:47b51e494c56495093304d"};
+firebase.initializeApp(firebaseConfig);
+window.db=firebase.firestore();
+const db=window.db;
+
+carregarLocal();
+if(!registros.length)zerarPainelInformativo();
+carregarDoFirebase();
+document.getElementById("dataOperacao").addEventListener("change",()=>{
+  registros=[];
+  document.getElementById("selectCarro").value="";
+  zerarPainelInformativo();
+  atualizarStatusTempoReal("blue","Conectando ao Firebase...");
+  carregarLocal();
+  if(!registros.length)zerarPainelInformativo();
+  carregarDoFirebase();
+});
+
+async function salvarFirebase(forcar=false){
+  const iso=document.getElementById("dataOperacao")?.value||hojeISO();
+  if(_limpandoFirebase)return;
+  if(!window.db||!registros)return;
+  if(registros.length===0 && !forcar)return;
+
+  if(_gravandoFirebase){
+    if(forcar){
+      if(_salvarFirebaseTimer)clearTimeout(_salvarFirebaseTimer);
+      _salvarFirebaseTimer=setTimeout(()=>salvarFirebase(true),250);
+    }
+    return;
+  }
+
+  _gravandoFirebase=true;
+  atualizarStatusTempoReal("wait","Gravando no banco...");
+  try{
+    const docRef=db.collection("expedicao_diaria").doc(iso);
+    let regsFinal=[];
+
+    await db.runTransaction(async tx=>{
+      const snap=await tx.get(docRef);
+      const existente=snap.exists?(snap.data()||{}):{};
+      const clearSeq=Number(existente.clearSeq||getClearSeq()||0);
+      if(clearSeq>getClearSeq())setClearSeq(clearSeq);
+      const regsExistentes=(Array.isArray(existente.registros)?existente.registros:[]).filter(r=>Number(r.criadoMs||0)>clearSeq);
+      const regsLocais=(registros||[]).map(registroParaFirebase).filter(r=>Number(r.criadoMs||0)>clearSeq);
+
+      // Regra principal: sempre SOMA/MERGE registros válidos após a última limpeza.
+      // Registros antigos, que estavam presos na memória de algum aparelho, são descartados.
+      regsFinal=mergeRegistros(regsExistentes,regsLocais).map((r,i)=>({...r,carro:i+1,data:iso}));
+
+      const payload={
+        data:iso,
+        dataBR:dataBR(iso),
+        clearSeq:clearSeq,
+        totalVeiculos:regsFinal.length,
+        assinados:regsFinal.filter(r=>r.status==="ASSINADO").length,
+        totalPacotes:regsFinal.reduce((s,r)=>s+Number(r.pacotes||0),0),
+        totalPecas:regsFinal.reduce((s,r)=>s+Number(r.pecas||0),0),
+        totalPeso:regsFinal.reduce((s,r)=>s+Number(r.peso||0),0),
+        registros:regsFinal,
+        apagadoDefinitivo:false,
+        atualizadoEm:new Date().toISOString()
+      };
+
+      tx.set(docRef,payload,{merge:true});
+    });
+
+    registros=mergeRegistros(registros,regsFinal);
+    registros.forEach((r,i)=>r.carro=i+1);
+    localStorage.setItem(storageKey(),JSON.stringify(registros));
+    renderTudo(false);
+    atualizarStatusTempoReal("ok","Banco salvo: "+registros.length+" veículo(s)");
+    console.log("Firebase salvo em tempo real:",iso,"total:",registros.length);
+  }catch(e){
+    atualizarStatusTempoReal("err","Erro ao salvar banco");
+    console.warn("Erro Firebase:",e);
+    alert("Atenção: os dados ficaram salvos neste aparelho, mas não foram gravados no Firebase. Verifique as regras/conexão do Firebase. Erro: "+e.message);
+  }finally{
+    _gravandoFirebase=false;
+  }
+}
+
+
+function abrirHistorico(){
+  let m=document.getElementById("modalHistExpedicao");
+  if(m){m.style.display="flex";carregarHistoricoFirebase();return;}
+  m=document.createElement("div");
+  m.id="modalHistExpedicao";
+  m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;";
+  m.innerHTML=`<div style="background:#fff;border-radius:18px;width:94%;max-width:1000px;max-height:90vh;overflow:auto;padding:28px;box-shadow:0 24px 48px rgba(0,0,0,.3)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <h2 style="margin:0;color:#0b2545;font-size:22px">📋 HISTÓRICO DE EXPEDIÇÕES</h2>
+      <button onclick="document.getElementById('modalHistExpedicao').style.display='none'" style="border:0;background:#f1f5f9;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:16px;font-weight:800">✕</button>
+    </div>
+    <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <input type="month" id="filtroMesExp" style="padding:8px;border:1px solid #e3eaf2;border-radius:8px;font-size:14px" onchange="carregarHistoricoFirebase()">
+      <button onclick="carregarHistoricoFirebase()" style="padding:8px 14px;background:#2563eb;color:white;border:0;border-radius:8px;cursor:pointer;font-weight:800">🔄 Atualizar</button>
+    </div>
+    <div id="listaHistExp">Carregando...</div>
+  </div>`;
+  document.body.appendChild(m);
+  document.getElementById("filtroMesExp").value=hojeISO().slice(0,7);
+  carregarHistoricoFirebase();
+}
+
+async function carregarHistoricoFirebase(){
+  const el=document.getElementById("listaHistExp");
+  if(!el)return;
+  el.innerHTML="⏳ Carregando registros...";
+  try{
+    const mes=document.getElementById("filtroMesExp")?.value||hojeISO().slice(0,7);
+    const snap=await db.collection("expedicao_diaria").where("data",">=",mes+"-01").where("data","<=",mes+"-31").orderBy("data","desc").get();
+    if(snap.empty){el.innerHTML='<div style="text-align:center;padding:40px;color:#64748b">Nenhum registro encontrado.</div>';return;}
+    let html='<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:10px;border-bottom:2px solid #e3eaf2">Data</th><th style="padding:10px;text-align:center;border-bottom:2px solid #e3eaf2">Veículos</th><th style="padding:10px;text-align:center;border-bottom:2px solid #e3eaf2">Assinados</th><th style="padding:10px;text-align:center;border-bottom:2px solid #e3eaf2">Pacotes</th><th style="padding:10px;text-align:center;border-bottom:2px solid #e3eaf2">Peso KG</th><th style="padding:10px;border-bottom:2px solid #e3eaf2">Atualizado</th><th style="padding:10px;border-bottom:2px solid #e3eaf2">Exportar</th></tr></thead><tbody>';
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const hora=d.atualizadoEm?new Date(d.atualizadoEm).toLocaleString("pt-BR"):"-";
+      html+=`<tr style="border-bottom:1px solid #e3eaf2">
+        <td style="padding:10px;font-weight:800">${d.dataBR||d.data}</td>
+        <td style="padding:10px;text-align:center;font-weight:800">${d.totalVeiculos||0}</td>
+        <td style="padding:10px;text-align:center;color:#09823f;font-weight:800">${d.assinados||0}</td>
+        <td style="padding:10px;text-align:center;color:#2563eb;font-weight:800">${(d.totalPacotes||0).toLocaleString("pt-BR")}</td>
+        <td style="padding:10px;text-align:center;color:#f97316;font-weight:800">${(d.totalPeso||0).toFixed(1)}</td>
+        <td style="padding:10px;font-size:12px;color:#64748b">${hora}</td>
+        <td style="padding:10px"><button onclick="exportarPDFHistoricoExp('${doc.id}')" style="padding:6px 12px;background:#0b2545;color:white;border:0;border-radius:6px;cursor:pointer;font-size:12px;font-weight:800">📄 PDF</button></td>
+      </tr>`;
+    });
+    html+='</tbody></table>';
+    el.innerHTML=html;
+  }catch(e){el.innerHTML='<div style="color:#dc2626">Erro: '+e.message+'</div>';}
+}
+
+
+function labelTurnoByHora(hora){
+  const t=turnoByHora(hora||"");
+  if(!hora)return "SEM TURNO DEFINIDO";
+  if(t==="A")return "TURNO A — 22:00 às 05:57";
+  if(t==="B")return "TURNO B — 06:00 às 14:20";
+  return "TURNO C — 13:40 às 22:00";
+}
+function resumoTurnosPDF(){
+  return "Turnos: TURNO A — 22:00 às 05:57 • TURNO B — 06:00 às 14:20 • TURNO C — 13:40 às 22:00";
+}
+function tabelaPorTurnoPDF(lista){
+  const grupos=[
+    {label:"TURNO A — 22:00 às 05:57",letra:"A"},
+    {label:"TURNO B — 06:00 às 14:20",letra:"B"},
+    {label:"TURNO C — 13:40 às 22:00",letra:"C"},
+  ];
+  let conteudo="";
+  grupos.forEach(({label,letra})=>{
+    const itens=lista.filter(r=>r.conclusaoCarregamento&&turnoByHora(r.conclusaoCarregamento)===letra);
+    if(!itens.length)return;
+    conteudo+=`<h2 class="turno-title">${label} — ${itens.length} veículo(s)</h2>`;
+    conteudo+=tabelaDetalhadaRegistros(itens);
+  });
+  const sem=lista.filter(r=>!r.conclusaoCarregamento);
+  if(sem.length){
+    conteudo+=`<h2 class="turno-title cinza">SEM TURNO DEFINIDO — ${sem.length} veículo(s)</h2>`;
+    conteudo+=tabelaDetalhadaRegistros(sem);
+  }
+  if(!conteudo)conteudo+=tabelaDetalhadaRegistros(lista);
+  return conteudo;
+}
+
+function turnoByHora(hora){
+  if(!hora)return "C";
+  const pts=hora.split(":");
+  const h=parseInt(pts[0]||0,10),m=parseInt(pts[1]||0,10);
+  const mins=h*60+m;
+  if(mins>=1320||mins<=357)return "A"; // 22:00-05:57
+  if(mins>=360&&mins<=860)return "B";  // 06:00-14:20
+  return "C";                           // 13:40-22:00
+}
+
+async function exportarPDFHistoricoExp(docId){
+  try{
+    const doc=await db.collection("expedicao_diaria").doc(docId).get();
+    if(!doc.exists){alert("Registro não encontrado.");return;}
+    const d=doc.data();
+    const regs=d.registros||[];
+    const titulo=`Expedição TFK - ${d.dataBR}`;
+    const grupos=[
+      {label:"TURNO A — 22:00 às 05:57",letra:"A"},
+      {label:"TURNO B — 06:00 às 14:20",letra:"B"},
+      {label:"TURNO C — 13:40 às 22:00",letra:"C"},
+    ];
+    const tempoMedio=(arr)=>{
+      const com=arr.filter(r=>r.chegadaMotorista&&r.saidaMotorista);
+      if(!com.length)return "--:--";
+      const toM=t=>{if(!t)return 0;const[h,m]=t.split(":").map(Number);return h*60+m;};
+      const avg=com.reduce((s,r)=>s+Math.abs(toM(r.saidaMotorista)-toM(r.chegadaMotorista)),0)/com.length;
+      return `${String(Math.floor(avg/60)).padStart(2,"0")}:${String(Math.round(avg%60)).padStart(2,"0")}`;
+    };
+    let conteudo=`<div class="resumo">Veículos: ${regs.length} &nbsp;•&nbsp; Assinados: ${regs.filter(r=>r.status==="ASSINADO").length} &nbsp;•&nbsp; Pacotes: ${fmt(regs.reduce((s,r)=>s+r.pacotes,0))} &nbsp;•&nbsp; Peças: ${fmt(regs.reduce((s,r)=>s+r.pecas,0))} &nbsp;•&nbsp; Peso: ${fmtPeso(regs.reduce((s,r)=>s+r.peso,0))} kg &nbsp;•&nbsp; Tempo médio: ${tempoMedio(regs)}</div>`;
+    conteudo+=tabelaPorTurnoPDF(regs);
+    abrirPDF(gerarHTMLPDF(titulo,conteudo));
+  }catch(e){alert("Erro: "+e.message);}
+}
+</script>
+</body>
+</html>
